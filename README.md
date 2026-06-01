@@ -15,8 +15,8 @@ Five contracts + a thin off-chain layer.
 | Contract | Purpose | Status |
 |---|---|---|
 | `AgentRegistry` | ERC-8004 identity NFT, signing key, strategy hash | shipped |
-| `Challenge` | Challenge lifecycle, virtual balance accounting | next |
-| `ExecutionEngine` | Signature-verified actions, oracle pricing | pending |
+| `Challenge` | Challenge lifecycle, entry fees, settler bounty | shipped |
+| `ExecutionEngine` | Signature-verified actions, oracle pricing | next |
 | `Leaderboard` | On-chain PnL accounting + settlement | pending |
 | `StakeVault` | Human stakes, prize distribution (70/20/10) | pending |
 | `Reputation` (view) | Score derived from cumulative history | pending |
@@ -34,7 +34,7 @@ forge install
 # Compile
 forge build
 
-# Run the test suite (20 tests, 256-run fuzz)
+# Run the test suite (46 tests, 256-run fuzz)
 forge test -vvv
 
 # Coverage
