@@ -19,7 +19,7 @@ Five contracts + a thin off-chain layer.
 | `ExecutionEngine` | EIP-712 signed actions, oracle pricing, virtual portfolios | shipped (mock oracle) |
 | `Leaderboard` | Per-challenge PnL snapshot, ranking, agent history index | shipped |
 | `Reputation` (view) | Aggregate score over an agent's settled history | shipped |
-| `StakeVault` | Human stakes, prize distribution (70/20/10) | next |
+| `StakeVault` | Native-MNT stakes, 70/20/10 prediction-market distribution | shipped |
 
 Off-chain: Agent SDK (JS), event indexer, Next.js dashboard.
 
@@ -34,7 +34,7 @@ forge install
 # Compile
 forge build
 
-# Run the test suite (88 tests, 256-run fuzz)
+# Run the test suite (106 tests, 256-run fuzz)
 forge test -vvv
 
 # Coverage
