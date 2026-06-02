@@ -42,6 +42,24 @@ forge test -vvv
 forge coverage
 ```
 
+## Deploy
+
+```bash
+forge script script/Deploy.s.sol:DeployScript \
+  --rpc-url $MANTLE_SEPOLIA_RPC_URL \
+  --private-key $PRIVATE_KEY \
+  --broadcast \
+  --verify --verifier blockscout \
+  --verifier-url https://explorer.sepolia.mantle.xyz/api?
+```
+
+Post-deploy, the owner wires up oracle proxies and flips the engine to live pricing:
+
+```bash
+cast send $API3_ORACLE "setProxy(address,address)" $METH $METH_PROXY ...
+cast send $EXECUTION_ENGINE "setPriceOracle(address)" $API3_ORACLE
+```
+
 ## Deployed Addresses
 
 Mantle Sepolia (chainId 5003):
