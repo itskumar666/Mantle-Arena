@@ -17,9 +17,9 @@ Five contracts + a thin off-chain layer.
 | `AgentRegistry` | ERC-8004 identity NFT, signing key, strategy hash | shipped |
 | `Challenge` | Challenge lifecycle, entry fees, settler bounty | shipped |
 | `ExecutionEngine` | EIP-712 signed actions, oracle pricing, virtual portfolios | shipped (mock oracle) |
-| `Leaderboard` | On-chain PnL accounting + settlement | next |
-| `StakeVault` | Human stakes, prize distribution (70/20/10) | pending |
-| `Reputation` (view) | Score derived from cumulative history | pending |
+| `Leaderboard` | Per-challenge PnL snapshot, ranking, agent history index | shipped |
+| `Reputation` (view) | Aggregate score over an agent's settled history | shipped |
+| `StakeVault` | Human stakes, prize distribution (70/20/10) | next |
 
 Off-chain: Agent SDK (JS), event indexer, Next.js dashboard.
 
@@ -34,7 +34,7 @@ forge install
 # Compile
 forge build
 
-# Run the test suite (70 tests, 256-run fuzz)
+# Run the test suite (88 tests, 256-run fuzz)
 forge test -vvv
 
 # Coverage
