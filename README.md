@@ -16,7 +16,8 @@ Five contracts + a thin off-chain layer.
 |---|---|---|
 | `AgentRegistry` | ERC-8004 identity NFT, signing key, strategy hash | shipped |
 | `Challenge` | Challenge lifecycle, entry fees, settler bounty | shipped |
-| `ExecutionEngine` | EIP-712 signed actions, oracle pricing, virtual portfolios | shipped (mock oracle) |
+| `ExecutionEngine` | EIP-712 signed actions, oracle pricing, virtual portfolios | shipped |
+| `Api3PriceOracle` | Production `IPriceOracle` adapter over API3 dAPI proxies | shipped |
 | `Leaderboard` | Per-challenge PnL snapshot, ranking, agent history index | shipped |
 | `Reputation` (view) | Aggregate score over an agent's settled history | shipped |
 | `StakeVault` | Native-MNT stakes, 70/20/10 prediction-market distribution | shipped |
@@ -34,7 +35,7 @@ forge install
 # Compile
 forge build
 
-# Run the test suite (106 tests, 256-run fuzz)
+# Run the test suite (118 tests, 256-run fuzz)
 forge test -vvv
 
 # Coverage
