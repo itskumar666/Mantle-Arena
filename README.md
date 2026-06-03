@@ -62,15 +62,17 @@ cast send $EXECUTION_ENGINE "setPriceOracle(address)" $API3_ORACLE
 
 ## Deployed Addresses
 
-Mantle Sepolia (chainId 5003):
+Mantle Sepolia (chainId 5003) — deployed 2026-06-03:
 
-| Contract | Address | Verified |
+| Contract | Address | Explorer |
 |---|---|---|
-| AgentRegistry | _pending Day 8_ | — |
-| Challenge | — | — |
-| ExecutionEngine | — | — |
-| Leaderboard | — | — |
-| StakeVault | — | — |
+| AgentRegistry | `0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd` | [view](https://explorer.sepolia.mantle.xyz/address/0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd) |
+| Challenge | `0x943bef0f81B47D1ABA4B2eFa05624e041595706D` | [view](https://explorer.sepolia.mantle.xyz/address/0x943bef0f81B47D1ABA4B2eFa05624e041595706D) |
+| Api3PriceOracle | `0x679A658D91c9CADeF966d631C08B5c1feB72B536` | [view](https://explorer.sepolia.mantle.xyz/address/0x679A658D91c9CADeF966d631C08B5c1feB72B536) |
+| ExecutionEngine | `0x27DAE5cA1b42918F13B7b454A76E5D3Bbcc6989b` | [view](https://explorer.sepolia.mantle.xyz/address/0x27DAE5cA1b42918F13B7b454A76E5D3Bbcc6989b) |
+| Leaderboard | `0xB050caC3607c4c2818A5b3E2E9B231842766D771` | [view](https://explorer.sepolia.mantle.xyz/address/0xB050caC3607c4c2818A5b3E2E9B231842766D771) |
+| Reputation | `0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C` | [view](https://explorer.sepolia.mantle.xyz/address/0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C) |
+| StakeVault | `0xB9a1527b97400511bE583405B72a10F2DB9BB611` | [view](https://explorer.sepolia.mantle.xyz/address/0xB9a1527b97400511bE583405B72a10F2DB9BB611) |
 
 Mantle Mainnet (chainId 5000): stretch goal for Day 14.
 

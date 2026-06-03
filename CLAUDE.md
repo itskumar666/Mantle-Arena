@@ -25,7 +25,7 @@ On-chain protocol on Mantle where AI trading agents register an ERC-8004 identit
 | 5 | API3 oracle adapter | done |
 | 6 | Leaderboard + Reputation | done |
 | 7 | StakeVault | done |
-| 8 | Deploy script | done (deploy not yet executed) |
+| 8 | Deploy script + testnet deploy | **done — contracts live on Mantle Sepolia** |
 | 9 | JS Agent SDK | **next** |
 | 10 | 3 + 1 reference agents | pending |
 | 11 | Indexer (Mantle Graph Endpoints) | pending |
@@ -110,22 +110,36 @@ Verifier: Mantlescan blockscout API
 
 ---
 
-## Deploy (not yet run)
+## Deployed Addresses — Mantle Sepolia (chainId 5003), 2026-06-03
 
+| Contract | Address |
+|---|---|
+| AgentRegistry | `0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd` |
+| Challenge | `0x943bef0f81B47D1ABA4B2eFa05624e041595706D` |
+| Api3PriceOracle | `0x679A658D91c9CADeF966d631C08B5c1feB72B536` |
+| ExecutionEngine | `0x27DAE5cA1b42918F13B7b454A76E5D3Bbcc6989b` |
+| Leaderboard | `0xB050caC3607c4c2818A5b3E2E9B231842766D771` |
+| Reputation | `0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C` |
+| StakeVault | `0xB9a1527b97400511bE583405B72a10F2DB9BB611` |
+
+Deployer/owner: `0x666AA4F5a674b9E50d8843F45a6Ef40244318550`
+Explorer: https://explorer.sepolia.mantle.xyz
+
+**Still needed: verify contracts on Mantle Explorer** (20-Project Award compliance):
 ```bash
-cp .env.example .env   # fill in PRIVATE_KEY, MANTLESCAN_API_KEY
-forge script script/Deploy.s.sol:DeployScript \
-  --rpc-url $MANTLE_SEPOLIA_RPC_URL \
-  --private-key $PRIVATE_KEY \
-  --broadcast \
-  --verify --verifier blockscout \
-  --verifier-url https://explorer.sepolia.mantle.xyz/api?
+forge verify-contract 0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd src/AgentRegistry.sol:AgentRegistry \
+  --verifier blockscout --verifier-url "https://explorer.sepolia.mantle.xyz/api?" \
+  --constructor-args $(cast abi-encode "constructor(address)" 0x666AA4F5a674b9E50d8843F45a6Ef40244318550) \
+  --chain 5003
+# Repeat for each contract — see verification section below
 ```
 
-Post-deploy (once you have real API3 proxy addresses for Mantle Sepolia):
+**Still needed: create first challenge** (demo requires at least one):
 ```bash
-cast send $API3_ORACLE "setProxy(address,address)" $METH_ADDR $METH_PROXY --rpc-url ...
-cast send $ENGINE "setPriceOracle(address)" $API3_ORACLE --rpc-url ...
+cast send 0x943bef0f81B47D1ABA4B2eFa05624e041595706D \
+  "createChallenge(uint64,uint64,uint128,uint128,uint128,address[])" \
+  <startTime> <endTime> 10000000000000000000000 0 0 "[0x...]" \
+  --rpc-url https://rpc.sepolia.mantle.xyz --private-key $PRIVATE_KEY
 ```
 
 ---
