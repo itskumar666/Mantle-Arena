@@ -138,12 +138,50 @@ const engineAbi = [
   },
 ] as const;
 
+const stakeVaultAbi = [
+  {
+    type: "function", name: "stake",
+    inputs: [{ name: "challengeId", type: "uint256" }, { name: "agentId", type: "uint256" }],
+    outputs: [],
+    stateMutability: "payable",
+  },
+  {
+    type: "function", name: "stakeOf",
+    inputs: [
+      { name: "challengeId", type: "uint256" },
+      { name: "agentId", type: "uint256" },
+      { name: "backer", type: "address" },
+    ],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function", name: "agentStakeTotal",
+    inputs: [{ name: "challengeId", type: "uint256" }, { name: "agentId", type: "uint256" }],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function", name: "claimable",
+    inputs: [{ name: "backer", type: "address" }],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function", name: "claim",
+    inputs: [],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+] as const;
+
 export const contracts = {
-  challenge: getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_CHALLENGE_ADDRESS"), abi: challengeAbi }),
-  registry:  getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS"), abi: registryAbi }),
-  leaderboard: getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_LEADERBOARD_ADDRESS"), abi: leaderboardAbi }),
-  reputation:  getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_REPUTATION_ADDRESS"), abi: reputationAbi }),
+  challenge:   getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_CHALLENGE_ADDRESS"),        abi: challengeAbi }),
+  registry:    getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS"),   abi: registryAbi }),
+  leaderboard: getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_LEADERBOARD_ADDRESS"),      abi: leaderboardAbi }),
+  reputation:  getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_REPUTATION_ADDRESS"),       abi: reputationAbi }),
   engine:      getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_EXECUTION_ENGINE_ADDRESS"), abi: engineAbi }),
+  stakeVault:  getContract({ client, chain: mantleSepolia, address: addr("NEXT_PUBLIC_STAKE_VAULT_ADDRESS"),      abi: stakeVaultAbi }),
 };
 
 // Phase names matching the on-chain enum
