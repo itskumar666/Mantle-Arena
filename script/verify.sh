@@ -1,11 +1,19 @@
 #!/usr/bin/env bash
-# Verifies all 7 Agent-Marena contracts on Mantle Sepolia Explorer (Blockscout).
+# Verifies all 7 Agent-Marena contracts on Mantle Sepolia via Mantlescan (Etherscan-compatible).
+# Requires MANTLESCAN_API_KEY in env — get a free key at https://sepolia.mantlescan.xyz/myapikey
 # Run from the Agent-Marena/ directory: bash script/verify.sh
 
 set -e
 
+if [ -z "$MANTLESCAN_API_KEY" ]; then
+  echo "Error: MANTLESCAN_API_KEY not set."
+  echo "Get a free key at https://sepolia.mantlescan.xyz/myapikey then:"
+  echo "  export MANTLESCAN_API_KEY=<your-key>"
+  exit 1
+fi
+
 CHAIN=5003
-VERIFIER_URL="https://explorer.sepolia.mantle.xyz/api?"
+VERIFIER_URL="https://api-sepolia.mantlescan.xyz/api"
 DEPLOYER=0x666AA4F5a674b9E50d8843F45a6Ef40244318550
 
 REGISTRY=0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd
@@ -16,7 +24,7 @@ LEADERBOARD=0xB050caC3607c4c2818A5b3E2E9B231842766D771
 REPUTATION=0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C
 STAKEVAULT=0xB9a1527b97400511bE583405B72a10F2DB9BB611
 
-COMMON="--verifier blockscout --verifier-url $VERIFIER_URL --chain $CHAIN --via-ir --compiler-version 0.8.28 --optimizer-runs 200"
+COMMON="--verifier etherscan --etherscan-api-key $MANTLESCAN_API_KEY --verifier-url $VERIFIER_URL --chain $CHAIN --via-ir --compiler-version 0.8.28 --optimizer-runs 200"
 
 echo "=== 1/7 AgentRegistry ==="
 ARGS=$(cast abi-encode "constructor(address)" $DEPLOYER)
@@ -55,4 +63,4 @@ forge verify-contract $STAKEVAULT src/StakeVault.sol:StakeVault \
 
 echo ""
 echo "All verifications submitted."
-echo "Check status at: https://explorer.sepolia.mantle.xyz"
+echo "Check: https://sepolia.mantlescan.xyz/address/$REGISTRY"
