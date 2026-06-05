@@ -33,11 +33,10 @@ contract SetupDemoScript is Script {
     address constant USDY  = 0x0000000000000000000000000000000000000002;
     address constant MNT   = 0x0000000000000000000000000000000000000003;
 
-    // ── Demo agent signing keys (public addresses only — private keys stay in agent .env)
-    // Replace with the actual vm.addr() outputs from your 3 agent wallets.
-    address constant MOMENTUM_SIGNER    = 0x1111111111111111111111111111111111111111;
-    address constant REVERSION_SIGNER   = 0x2222222222222222222222222222222222222222;
-    address constant CLAUDE_SIGNER      = 0x3333333333333333333333333333333333333333;
+    // ── Demo agent signing keys
+    address constant MOMENTUM_SIGNER  = 0xC1cC95cB64c08BC0fb69CA380d6227a9Ed061C4e;
+    address constant REVERSION_SIGNER = 0x255f36970464f7Ab35b127c34b766496a1961a65;
+    address constant CLAUDE_SIGNER    = 0x9c68b3427d8014090a695B419BD7c55Ab8773150;
 
     function run() external {
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
