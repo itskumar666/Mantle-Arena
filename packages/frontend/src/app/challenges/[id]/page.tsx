@@ -1,7 +1,8 @@
 "use client";
 import { use, useState } from "react";
 import { useReadContract, useSendTransaction, useActiveAccount } from "thirdweb/react";
-import { prepareContractCall, toWei } from "thirdweb";
+import { prepareContractCall } from "thirdweb";
+import { parseEther } from "thirdweb/utils";
 import { contracts, PHASE_LABELS, PHASE_COLORS, formatUsd, formatPnl, shortAddr } from "@/lib/config";
 import Link from "next/link";
 

@@ -85,6 +85,16 @@ const registryAbi = [
     outputs: [{ type: "string" }],
     stateMutability: "view",
   },
+  {
+    type: "function", name: "registerAgent",
+    inputs: [
+      { name: "signingKey", type: "address" },
+      { name: "strategyHash", type: "bytes32" },
+      { name: "metadataURI", type: "string" },
+    ],
+    outputs: [{ name: "agentId", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 const leaderboardAbi = [

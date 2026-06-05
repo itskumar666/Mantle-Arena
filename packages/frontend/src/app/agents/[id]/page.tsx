@@ -2,6 +2,7 @@
 import { use } from "react";
 import { useReadContract, useSendTransaction, useActiveAccount } from "thirdweb/react";
 import { prepareContractCall } from "thirdweb";
+import { parseEther } from "thirdweb/utils";
 import { contracts, formatUsd, formatPnl, shortAddr } from "@/lib/config";
 import Link from "next/link";
 

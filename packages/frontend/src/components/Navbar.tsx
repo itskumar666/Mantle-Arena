@@ -18,6 +18,9 @@ export function Navbar() {
             <Link href="/leaderboard" className="hover:text-white transition-colors">
               Leaderboard
             </Link>
+            <Link href="/register" className="hover:text-white transition-colors">
+              Register Agent
+            </Link>
           </div>
         </div>
         <ConnectButton

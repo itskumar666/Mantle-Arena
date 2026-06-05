@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Script, console2} from "forge-std/Script.sol";
 
+
 import {AgentRegistry} from "../src/AgentRegistry.sol";
 import {Challenge} from "../src/Challenge.sol";
 import {ExecutionEngine} from "../src/ExecutionEngine.sol";
@@ -41,6 +42,7 @@ contract DeployScript is Script {
     }
 
     function run() external returns (Deployment memory d) {
+    
         uint256 deployerKey = vm.envUint("PRIVATE_KEY");
         address deployer = vm.addr(deployerKey);
         address treasury = vm.envOr("PROTOCOL_TREASURY", deployer);
