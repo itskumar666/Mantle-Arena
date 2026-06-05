@@ -8,7 +8,6 @@
  *
  * Uses Thirdweb SDK for all Mantle interactions (Mantle ecosystem tooling).
  */
-import "dotenv/config";
 import { getPrice, PriceHistory } from "../utils/oracle.js";
 import { submitTrade, usdAmount, fractionOfHoldings } from "../utils/submit.js";
 import { getPortfolio } from "../utils/signer.js";

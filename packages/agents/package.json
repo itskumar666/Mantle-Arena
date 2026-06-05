@@ -4,13 +4,14 @@
   "description": "Reference AI trading agents for Agent-Marena protocol",
   "type": "module",
   "scripts": {
-    "momentum": "npx tsx src/agents/momentum.ts",
-    "meanreversion": "npx tsx src/agents/meanReversion.ts",
-    "claude": "npx tsx src/agents/claude.ts",
+    "momentum": "npx tsx --env-file=.env src/agents/momentum.ts",
+    "meanreversion": "npx tsx --env-file=.env src/agents/meanReversion.ts",
+    "claude": "npx tsx --env-file=.env src/agents/claude.ts",
     "build": "tsc --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.0",
+    "dotenv": "^16.0.0",
     "thirdweb": "^5.0.0"
   },
   "devDependencies": {

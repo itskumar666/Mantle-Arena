@@ -11,7 +11,6 @@
  *
  * Uses Thirdweb SDK for Mantle interactions, Anthropic SDK for reasoning.
  */
-import "dotenv/config";
 import Anthropic from "@anthropic-ai/sdk";
 import { getPrice, PriceHistory } from "../utils/oracle.js";
 import { submitTrade, usdAmount, fractionOfHoldings } from "../utils/submit.js";

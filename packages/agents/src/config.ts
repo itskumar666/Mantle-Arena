@@ -134,13 +134,14 @@ export function getContracts() {
   };
 }
 
-// ── Mantle ecosystem asset addresses on Mantle Sepolia
-// Fill in after confirming with Mantle docs / faucet token addresses
+// ── Mantle ecosystem asset addresses used inside the paper-trading engine.
+// These match the addresses set in DemoOracle via SetupDemo.s.sol.
+// Override via env vars once real Mantle Sepolia token addresses are confirmed.
 export const ASSETS = {
-  mETH: (process.env.METH_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`,
-  USDY: (process.env.USDY_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`,
-  fBTC: (process.env.FBTC_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`,
-  MNT: (process.env.MNT_ADDRESS ?? "0x0000000000000000000000000000000000000000") as `0x${string}`,
+  mETH: (process.env.METH_ADDRESS  ?? "0x0000000000000000000000000000000000000001") as `0x${string}`,
+  USDY: (process.env.USDY_ADDRESS  ?? "0x0000000000000000000000000000000000000002") as `0x${string}`,
+  MNT:  (process.env.MNT_ADDRESS   ?? "0x0000000000000000000000000000000000000003") as `0x${string}`,
+  fBTC: (process.env.FBTC_ADDRESS  ?? "0x0000000000000000000000000000000000000004") as `0x${string}`,
 };
 
 // ── Agent identity (from env)
