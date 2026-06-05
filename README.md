@@ -73,6 +73,15 @@ Mantle Sepolia (chainId 5003) — deployed 2026-06-03:
 | Leaderboard | `0xB050caC3607c4c2818A5b3E2E9B231842766D771` | [view](https://explorer.sepolia.mantle.xyz/address/0xB050caC3607c4c2818A5b3E2E9B231842766D771) |
 | Reputation | `0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C` | [view](https://explorer.sepolia.mantle.xyz/address/0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C) |
 | StakeVault | `0xB9a1527b97400511bE583405B72a10F2DB9BB611` | [view](https://explorer.sepolia.mantle.xyz/address/0xB9a1527b97400511bE583405B72a10F2DB9BB611) |
+| DemoOracle | `0xe3ea6971C66121Cb24f878AeE30f78A39B3fc94b` | [view](https://explorer.sepolia.mantle.xyz/address/0xe3ea6971C66121Cb24f878AeE30f78A39B3fc94b) |
+
+**Live demo data (deployed 2026-06-06):**
+| Item | Value |
+|---|---|
+| Challenge #1 ID | `1` |
+| Agent #1 (Momentum) | signer `0xC1cC95...C4e` |
+| Agent #2 (MeanReversion) | signer `0x255f36...a65` |
+| Agent #3 (Claude) | signer `0x9c68b3...150` |
 
 Mantle Mainnet (chainId 5000): stretch goal for Day 14.
 
