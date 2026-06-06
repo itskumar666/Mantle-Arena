@@ -1,88 +1,98 @@
 /**
- * Claude-Powered Agent — uses Anthropic claude-sonnet-4-6 to reason about
+ * AI-Powered Trading Agent — uses Groq (Llama 3.3 70B, free tier) to reason about
  * market conditions and decide Buy / Sell / Hold with position sizing.
  *
+ * Groq is OpenAI API-compatible, free at groq.com/keys, fast inference.
+ * Swap GROQ_API_KEY for any OpenAI-compatible provider (Together, Fireworks, etc.)
+ * by changing GROQ_BASE_URL.
+ *
  * At each tick the agent:
- *   1. Reads current prices (API3 oracle on Mantle via Thirdweb)
+ *   1. Reads current prices (oracle on Mantle via Thirdweb)
  *   2. Reads portfolio state (cash, holdings, total value)
  *   3. Builds a structured prompt with the last N price samples
- *   4. Calls Claude and parses a structured JSON decision
+ *   4. Calls Llama 3.3 70B on Groq and parses a structured JSON decision
  *   5. If not Hold, signs + submits the action via Thirdweb on Mantle
- *
- * Uses Thirdweb SDK for Mantle interactions, Anthropic SDK for reasoning.
  */
-import Anthropic from "@anthropic-ai/sdk";
 import { getPrice, PriceHistory } from "../utils/oracle.js";
 import { submitTrade, usdAmount, fractionOfHoldings } from "../utils/submit.js";
 import { getPortfolio } from "../utils/signer.js";
 import { Buy, Sell } from "../utils/signer.js";
 import { ASSETS, agentConfig } from "../config.js";
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const GROQ_API_KEY  = process.env.GROQ_API_KEY ?? "";
+const GROQ_BASE_URL = process.env.AI_BASE_URL ?? "https://api.groq.com/openai/v1";
+const AI_MODEL      = process.env.AI_MODEL     ?? "llama-3.3-70b-versatile";
 
-const POLL_INTERVAL_MS = 30_000; // Claude calls cost tokens; slower cadence
-const HISTORY_WINDOW = 10;
+const POLL_INTERVAL_MS = 30_000;
+const HISTORY_WINDOW   = 10;
 const MAX_BUY_NOTIONAL = usdAmount(1000);
+const TARGET_ASSET     = ASSETS.mETH;
 
-const TARGET_ASSET = ASSETS.mETH;
-
-interface ClaudeDecision {
-  action: "BUY" | "SELL" | "HOLD";
-  size_pct: number;  // % of available cash (BUY) or % of holdings (SELL)
+interface AIDecision {
+  action:    "BUY" | "SELL" | "HOLD";
+  size_pct:  number;
   reasoning: string;
 }
 
-async function askClaude(
+async function askAI(
   priceHistory: bigint[],
   currentPrice: bigint,
-  cashBalance: bigint,
+  cashBalance:  bigint,
   portfolioValue: bigint,
-): Promise<ClaudeDecision> {
-  const priceHistoryUsd = priceHistory.map((p) => Number(p) / 1e18);
+): Promise<AIDecision> {
+  const priceHistoryUsd = priceHistory.map(p => Number(p) / 1e18);
   const currentPriceUsd = Number(currentPrice) / 1e18;
-  const cashUsd = Number(cashBalance) / 1e18;
-  const valueUsd = Number(portfolioValue) / 1e18;
-  const holdingsValue = valueUsd - cashUsd;
-  const holdingsPct = valueUsd > 0 ? ((holdingsValue / valueUsd) * 100).toFixed(1) : "0.0";
+  const cashUsd         = Number(cashBalance)  / 1e18;
+  const valueUsd        = Number(portfolioValue) / 1e18;
+  const holdingsValue   = valueUsd - cashUsd;
+  const holdingsPct     = valueUsd > 0 ? ((holdingsValue / valueUsd) * 100).toFixed(1) : "0.0";
 
   const prompt = `You are a trading agent in a paper-trading competition on the Mantle blockchain.
 Your goal: maximise portfolio value against other AI agents.
 
 Current market state for mETH/USD:
 - Current price: $${currentPriceUsd.toFixed(2)}
-- Recent prices (oldest → newest): ${priceHistoryUsd.map((p) => `$${p.toFixed(2)}`).join(", ")}
+- Recent prices (oldest → newest): ${priceHistoryUsd.map(p => `$${p.toFixed(2)}`).join(", ")}
 
 Your portfolio:
-- Cash balance: $${cashUsd.toFixed(2)}
+- Cash: $${cashUsd.toFixed(2)}
 - Holdings value: $${holdingsValue.toFixed(2)} (${holdingsPct}% of portfolio)
-- Total portfolio value: $${valueUsd.toFixed(2)}
+- Total value: $${valueUsd.toFixed(2)}
 
-Decide your next action. Respond with ONLY valid JSON in this exact format:
-{
-  "action": "BUY" | "SELL" | "HOLD",
-  "size_pct": <0-100, percentage of available cash to spend on BUY, or % of holdings to sell on SELL>,
-  "reasoning": "<one sentence>"
-}`;
+Respond with ONLY valid JSON:
+{"action":"BUY"|"SELL"|"HOLD","size_pct":<0-100>,"reasoning":"<one sentence>"}`;
 
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 256,
-    messages: [{ role: "user", content: prompt }],
+  const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: {
+      "Content-Type":  "application/json",
+      "Authorization": `Bearer ${GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: AI_MODEL,
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 128,
+      temperature: 0.3,
+    }),
   });
 
-  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  if (!res.ok) throw new Error(`AI API error: ${res.status} ${await res.text()}`);
+  const data = await res.json() as { choices: Array<{ message: { content: string } }> };
+  const text = data.choices[0]?.message?.content ?? "";
 
-  // Extract JSON from response (Claude might wrap it in markdown)
-  const jsonMatch = text.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error(`No JSON in Claude response: ${text}`);
-
-  const decision = JSON.parse(jsonMatch[0]) as ClaudeDecision;
-  console.log(`[Claude] ${decision.action} ${decision.size_pct}% — ${decision.reasoning}`);
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error(`No JSON in AI response: ${text}`);
+  const decision = JSON.parse(match[0]) as AIDecision;
+  console.log(`[AI] ${decision.action} ${decision.size_pct}% — ${decision.reasoning}`);
   return decision;
 }
 
 async function run(): Promise<void> {
-  console.log(`[Claude] Starting — agentId=${agentConfig.agentId} challengeId=${agentConfig.challengeId}`);
+  if (!GROQ_API_KEY) {
+    console.error("[AI] GROQ_API_KEY not set. Get a free key at https://console.groq.com/keys");
+    process.exit(1);
+  }
+  console.log(`[AI] Starting — agentId=${agentConfig.agentId} challengeId=${agentConfig.challengeId} model=${AI_MODEL}`);
 
   const history = new PriceHistory(HISTORY_WINDOW);
 
@@ -92,38 +102,27 @@ async function run(): Promise<void> {
       history.push(price);
 
       if (history.length < 3) {
-        console.log(`[Claude] Gathering price history (${history.length}/3)...`);
+        console.log(`[AI] Gathering price history (${history.length}/3)...`);
         await sleep(POLL_INTERVAL_MS);
         continue;
       }
 
       const { cash, value } = await getPortfolio();
+      const samples = (history as unknown as { samples: bigint[] }).samples;
 
-      const decision = await askClaude(
-        // expose internal samples via a getter — PriceHistory stores them privately,
-        // so we cast to access the field for the prompt (acceptable for demo code)
-        (history as unknown as { samples: bigint[] }).samples,
-        price,
-        cash,
-        value,
-      );
+      const decision = await askAI(samples, price, cash, value);
 
       if (decision.action === "BUY" && decision.size_pct > 0) {
         const rawSize = (cash * BigInt(Math.floor(decision.size_pct))) / 100n;
         const size = rawSize < MAX_BUY_NOTIONAL ? rawSize : MAX_BUY_NOTIONAL;
-        if (size > 0n) {
-          await submitTrade({ kind: Buy, asset: TARGET_ASSET, size });
-        }
+        if (size > 0n) await submitTrade({ kind: Buy, asset: TARGET_ASSET, size });
       } else if (decision.action === "SELL" && decision.size_pct > 0) {
         const holdingsValue = value > cash ? value - cash : 0n;
         const size = fractionOfHoldings(holdingsValue, decision.size_pct / 100);
-        if (size > 0n) {
-          await submitTrade({ kind: Sell, asset: TARGET_ASSET, size });
-        }
+        if (size > 0n) await submitTrade({ kind: Sell, asset: TARGET_ASSET, size });
       }
-      // HOLD → do nothing
     } catch (err) {
-      console.error("[Claude] Error:", err);
+      console.error("[AI] Error:", err);
     }
 
     await sleep(POLL_INTERVAL_MS);
@@ -131,7 +130,7 @@ async function run(): Promise<void> {
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise((r) => setTimeout(r, ms));
+  return new Promise(r => setTimeout(r, ms));
 }
 
 run().catch(console.error);
