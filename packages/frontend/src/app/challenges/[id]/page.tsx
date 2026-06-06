@@ -6,6 +6,33 @@ import { parseEther } from "thirdweb/utils";
 import { contracts, PHASE_LABELS, PHASE_COLORS, formatUsd, formatPnl, shortAddr } from "@/lib/config";
 import Link from "next/link";
 
+function SettleButton({ challengeId }: { challengeId: bigint }) {
+  const { mutate: sendTx, isPending, isSuccess } = useSendTransaction();
+
+  function handleSettle() {
+    const tx = prepareContractCall({
+      contract: contracts.leaderboard,
+      method: "settle",
+      params: [challengeId],
+    });
+    sendTx(tx);
+  }
+
+  if (isSuccess) return (
+    <span className="text-green-400 text-sm font-medium">✓ Settled — reload to see results</span>
+  );
+
+  return (
+    <button
+      onClick={handleSettle}
+      disabled={isPending}
+      className="px-4 py-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold rounded-lg disabled:opacity-50 transition-colors text-sm"
+    >
+      {isPending ? "Settling…" : "Settle Challenge"}
+    </button>
+  );
+}
+
 const LIVE_POLL_MS = 15_000; // refresh portfolio values every 15s during live phase
 
 // ── Agent row in the leaderboard table
@@ -165,6 +192,7 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
         </div>
         <div className="flex items-center gap-3">
           {isLive && <span className="text-xs text-green-400 animate-pulse">● Live — refreshing every 15s</span>}
+          {phase === 2 && !isSettled && <SettleButton challengeId={challengeId} />}
           <span className={`text-sm px-3 py-1 rounded-full ${PHASE_COLORS[phase]}`}>
             {PHASE_LABELS[phase]}
           </span>

@@ -104,6 +104,7 @@ const leaderboardAbi = [
     outputs: [{ type: "tuple", components: [{ name: "finalValue", type: "uint256" }, { name: "pnl", type: "int256" }] }],
     stateMutability: "view",
   },
+  { type: "function", name: "settle", inputs: [{ name: "challengeId", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
 ] as const;
 
 const reputationAbi = [
