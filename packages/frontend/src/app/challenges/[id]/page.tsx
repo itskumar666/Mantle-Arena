@@ -1,5 +1,5 @@
 "use client";
-import { use, useState } from "react";
+import { useState } from "react";
 import { useReadContract, useSendTransaction, useActiveAccount } from "thirdweb/react";
 import { prepareContractCall } from "thirdweb";
 import { parseEther } from "thirdweb/utils";
@@ -127,8 +127,8 @@ function AgentRow({
 }
 
 // ── Main page
-export default function ChallengePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ChallengePage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const challengeId = BigInt(id);
 
   const { data: challenge } = useReadContract({ contract: contracts.challenge, method: "getChallenge", params: [challengeId] });

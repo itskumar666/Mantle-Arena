@@ -1,13 +1,12 @@
 "use client";
-import { use } from "react";
 import { useReadContract, useSendTransaction, useActiveAccount } from "thirdweb/react";
 import { prepareContractCall } from "thirdweb";
 import { parseEther } from "thirdweb/utils";
 import { contracts, formatUsd, formatPnl, shortAddr } from "@/lib/config";
 import Link from "next/link";
 
-export default function AgentPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function AgentPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const agentId = BigInt(id);
   const account = useActiveAccount();
   const { mutate: sendTx, isPending: txPending } = useSendTransaction();
