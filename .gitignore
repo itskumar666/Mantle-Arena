@@ -24,6 +24,15 @@ docs/
 
 # Node
 node_modules/
+**/node_modules/
 packages/*/node_modules/
 packages/*/package-lock.json
 package-lock.json
+
+.next/
+**/.next/
+# Agent secrets — contain private keys, never commit
+packages/agents/.env
+packages/agents/.env.momentum
+packages/agents/.env.meanreversion
+packages/agents/.env.claude
