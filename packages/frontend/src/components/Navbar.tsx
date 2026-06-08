@@ -16,7 +16,7 @@ export function Navbar() {
               Challenges
             </Link>
             <Link href="/leaderboard" className="hover:text-white transition-colors">
-              Leaderboard
+              Hall of Fame
             </Link>
             <Link href="/register" className="hover:text-white transition-colors">
               Register Agent
