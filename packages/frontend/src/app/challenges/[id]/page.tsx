@@ -115,9 +115,50 @@ function SettleButton({ challengeId }: { challengeId: bigint }) {
   );
 }
 
+// ── Holdings breakdown: shows per-asset positions + cash
+function HoldingsBreakdown({ challengeId, agentId, allowedAssets, isLive }: {
+  challengeId: bigint; agentId: bigint; allowedAssets: readonly string[]; isLive: boolean;
+}) {
+  const poll = isLive ? LIVE_POLL_MS : undefined;
+  const { data: cash } = useReadContract({
+    contract: contracts.engine, method: "cash", params: [challengeId, agentId],
+    queryOptions: { refetchInterval: poll },
+  });
+
+  const assetHooks = allowedAssets.map(asset => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const { data } = useReadContract({
+      contract: contracts.engine, method: "holdings", params: [challengeId, agentId, asset as `0x${string}`],
+      queryOptions: { refetchInterval: poll },
+    });
+    return { asset, amount: data };
+  });
+
+  const positions = assetHooks.filter(h => h.amount != null && h.amount > 0n);
+  const cashUsd   = cash != null ? Number(cash) / 1e18 : null;
+
+  if (positions.length === 0 && cashUsd === null) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2 mt-1">
+      {positions.map(({ asset, amount }) => (
+        <span key={asset} className={`text-xs px-1.5 py-0.5 rounded bg-white/5 font-mono`}>
+          {(Number(amount!) / 1e18).toFixed(4)} {assetSymbol(asset)}
+        </span>
+      ))}
+      {cashUsd !== null && (
+        <span className="text-xs px-1.5 py-0.5 rounded bg-white/5 font-mono text-gray-400">
+          ${cashUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} cash
+        </span>
+      )}
+    </div>
+  );
+}
+
 // ── Agent row
-function AgentRow({ challengeId, agentId, rank, isLive, isSettled }: {
+function AgentRow({ challengeId, agentId, rank, isLive, isSettled, allowedAssets }: {
   challengeId: bigint; agentId: bigint; rank: number; isLive: boolean; isSettled: boolean;
+  allowedAssets: readonly string[];
 }) {
   const [staking, setStaking]   = useState(false);
   const [stakeAmt, setStakeAmt] = useState("");
@@ -152,7 +193,12 @@ function AgentRow({ challengeId, agentId, rank, isLive, isSettled }: {
         <Link href={`/agents/${agentId}`} className="hover:text-blue-400 font-mono text-sm">Agent #{agentId.toString()}</Link>
       </td>
       <td className="py-3 px-4 font-mono text-sm text-gray-400">{agent ? shortAddr(agent.developer) : "—"}</td>
-      <td className="py-3 px-4 text-right text-sm">{value != null ? formatUsd(value) : <span className="text-gray-600">—</span>}</td>
+      <td className="py-3 px-4 text-right text-sm">
+        <div>{value != null ? formatUsd(value) : <span className="text-gray-600">—</span>}</div>
+        <div className="flex justify-end">
+          <HoldingsBreakdown challengeId={challengeId} agentId={agentId} allowedAssets={allowedAssets} isLive={isLive} />
+        </div>
+      </td>
       <td className={`py-3 px-4 text-right text-sm font-medium ${pnlPos === true ? "text-green-400" : pnlPos === false ? "text-red-400" : "text-gray-500"}`}>
         {pnl != null ? formatPnl(pnl) : "—"}
       </td>
@@ -338,7 +384,8 @@ export default function ChallengePage({ params }: { params: { id: string } }) {
               <tbody>
                 {agentList.map((agentId, i) => (
                   <AgentRow key={agentId.toString()} challengeId={challengeId} agentId={agentId}
-                    rank={i + 1} isLive={isLive} isSettled={isSettled} />
+                    rank={i + 1} isLive={isLive} isSettled={isSettled}
+                    allowedAssets={allowedAssets ?? []} />
                 ))}
               </tbody>
             </table>

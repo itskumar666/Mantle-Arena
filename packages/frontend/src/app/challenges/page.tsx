@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useReadContract } from "thirdweb/react";
-import { contracts, PHASE_LABELS, PHASE_COLORS, formatUsd, formatPnl, shortAddr, assetSymbol } from "@/lib/config";
+import { contracts, PHASE_LABELS, PHASE_COLORS, formatUsd, shortAddr, assetSymbol } from "@/lib/config";
 import Link from "next/link";
 
 type Tab = "all" | "enrolling" | "live" | "ended" | "settled";
@@ -13,45 +13,24 @@ const TABS: { key: Tab; label: string; phase: number | null }[] = [
   { key: "settled",  label: "Settled",   phase: 3    },
 ];
 
-function WinnerBadge({ challengeId, isSettled }: { challengeId: bigint; isSettled: boolean }) {
-  const { data: ranking } = useReadContract({ contract: contracts.leaderboard, method: "ranking", params: [challengeId], queryOptions: { enabled: isSettled } });
-  const winnerId = ranking?.[0];
-  const { data: result }  = useReadContract({ contract: contracts.leaderboard, method: "resultOf", params: [challengeId, winnerId ?? 0n], queryOptions: { enabled: isSettled && winnerId != null } });
-
-  if (!isSettled || !winnerId) return null;
-  return (
-    <div className="flex items-center justify-between bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2 text-sm">
-      <div className="flex items-center gap-2">
-        <span>🏆</span>
-        <Link href={`/agents/${winnerId}`} className="font-mono text-xs hover:text-yellow-300 transition-colors">
-          Agent #{winnerId.toString()}
-        </Link>
-      </div>
-      {result && <span className={`font-semibold text-xs ${result.pnl >= 0n ? "text-green-400" : "text-red-400"}`}>{formatPnl(result.pnl)}</span>}
-    </div>
-  );
-}
 
 function ChallengeCard({ id, filterPhase }: { id: bigint; filterPhase: number | null }) {
   const { data: challenge }    = useReadContract({ contract: contracts.challenge,   method: "getChallenge",    params: [id] });
   const { data: phaseRaw }     = useReadContract({ contract: contracts.challenge,   method: "phaseOf",         params: [id] });
   const { data: participants } = useReadContract({ contract: contracts.challenge,   method: "getParticipants", params: [id] });
   const { data: allowedAssets }= useReadContract({ contract: contracts.challenge,   method: "getAllowedAssets", params: [id] });
-  const { data: settled }      = useReadContract({ contract: contracts.leaderboard, method: "isSettled",       params: [id] });
-
   const phase = Number(phaseRaw ?? 0);
   if (filterPhase !== null && phase !== filterPhase) return null;
 
   if (!challenge) return <div className="border border-white/10 rounded-lg p-5 animate-pulse h-52 bg-white/5" />;
 
-  const isSettled = !!settled;
   const now = BigInt(Math.floor(Date.now() / 1000));
 
   function timeLabel() {
     if (phase === 0) { const d = Number(challenge!.startTime) - Number(now); return d > 0 ? `Starts in ${fmtDur(d)}` : "Starting soon"; }
     if (phase === 1) { const d = Number(challenge!.endTime)   - Number(now); return d > 0 ? `Ends in ${fmtDur(d)}`   : "Ending soon"; }
     if (phase === 2) return "Ready to settle";
-    return `Settled · ${new Date(Number(challenge!.endTime) * 1000).toLocaleDateString()}`;
+    if (phase === 3) return `Settled · ${new Date(Number(challenge!.endTime) * 1000).toLocaleDateString()}`;
   }
 
   return (
@@ -92,8 +71,6 @@ function ChallengeCard({ id, filterPhase }: { id: bigint; filterPhase: number | 
           <div className="font-mono text-xs mt-0.5 text-gray-400">{shortAddr(challenge.creator)}</div>
         </div>
       </div>
-
-      <WinnerBadge challengeId={id} isSettled={isSettled} />
 
       <div className="flex items-center justify-between mt-auto pt-1">
         <span className="text-xs text-gray-500">{timeLabel()}</span>
