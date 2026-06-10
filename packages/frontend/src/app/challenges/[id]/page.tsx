@@ -115,38 +115,43 @@ function SettleButton({ challengeId }: { challengeId: bigint }) {
   );
 }
 
-// ── Holdings breakdown: shows per-asset positions + cash
+// ── Single asset holding chip
+function AssetHolding({ challengeId, agentId, asset, isLive }: {
+  challengeId: bigint; agentId: bigint; asset: string; isLive: boolean;
+}) {
+  const { data: amount } = useReadContract({
+    contract: contracts.engine,
+    method: "holdings",
+    params: [challengeId, agentId, asset as `0x${string}`],
+    queryOptions: { refetchInterval: isLive ? LIVE_POLL_MS : undefined },
+  });
+  if (!amount || amount === 0n) return null;
+  const meta = ASSET_META[asset];
+  return (
+    <span className={`text-xs px-1.5 py-0.5 rounded bg-white/5 font-mono ${meta?.color ?? "text-white"}`}>
+      {(Number(amount) / 1e18).toFixed(4)} {meta?.symbol ?? asset.slice(0, 6)}
+    </span>
+  );
+}
+
+// ── Holdings breakdown: cash + per-asset positions
 function HoldingsBreakdown({ challengeId, agentId, allowedAssets, isLive }: {
   challengeId: bigint; agentId: bigint; allowedAssets: readonly string[]; isLive: boolean;
 }) {
-  const poll = isLive ? LIVE_POLL_MS : undefined;
   const { data: cash } = useReadContract({
-    contract: contracts.engine, method: "cash", params: [challengeId, agentId],
-    queryOptions: { refetchInterval: poll },
+    contract: contracts.engine,
+    method: "cash",
+    params: [challengeId, agentId],
+    queryOptions: { refetchInterval: isLive ? LIVE_POLL_MS : undefined },
   });
-
-  const assetHooks = allowedAssets.map(asset => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data } = useReadContract({
-      contract: contracts.engine, method: "holdings", params: [challengeId, agentId, asset as `0x${string}`],
-      queryOptions: { refetchInterval: poll },
-    });
-    return { asset, amount: data };
-  });
-
-  const positions = assetHooks.filter(h => h.amount != null && h.amount > 0n);
-  const cashUsd   = cash != null ? Number(cash) / 1e18 : null;
-
-  if (positions.length === 0 && cashUsd === null) return null;
+  const cashUsd = cash != null ? Number(cash) / 1e18 : null;
 
   return (
-    <div className="flex flex-wrap gap-2 mt-1">
-      {positions.map(({ asset, amount }) => (
-        <span key={asset} className={`text-xs px-1.5 py-0.5 rounded bg-white/5 font-mono`}>
-          {(Number(amount!) / 1e18).toFixed(4)} {assetSymbol(asset)}
-        </span>
+    <div className="flex flex-wrap justify-end gap-1.5 mt-1">
+      {allowedAssets.map(asset => (
+        <AssetHolding key={asset} challengeId={challengeId} agentId={agentId} asset={asset} isLive={isLive} />
       ))}
-      {cashUsd !== null && (
+      {cashUsd !== null && cashUsd > 0.01 && (
         <span className="text-xs px-1.5 py-0.5 rounded bg-white/5 font-mono text-gray-400">
           ${cashUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} cash
         </span>

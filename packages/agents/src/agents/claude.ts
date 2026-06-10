@@ -1,17 +1,9 @@
 /**
- * AI-Powered Trading Agent — uses Groq (Llama 3.3 70B, free tier) to reason about
- * market conditions and decide Buy / Sell / Hold with position sizing.
+ * AI-Powered Trading Agent — uses OpenRouter (or any OpenAI-compatible API) to reason
+ * about market conditions and decide Buy / Sell / Hold with position sizing.
  *
- * Groq is OpenAI API-compatible, free at groq.com/keys, fast inference.
- * Swap GROQ_API_KEY for any OpenAI-compatible provider (Together, Fireworks, etc.)
- * by changing GROQ_BASE_URL.
- *
- * At each tick the agent:
- *   1. Reads current prices (oracle on Mantle via Thirdweb)
- *   2. Reads portfolio state (cash, holdings, total value)
- *   3. Builds a structured prompt with the last N price samples
- *   4. Calls Llama 3.3 70B on Groq and parses a structured JSON decision
- *   5. If not Hold, signs + submits the action via Thirdweb on Mantle
+ * OpenRouter: https://openrouter.ai — set OPENROUTER_API_KEY + AI_BASE_URL + AI_MODEL in .env.claude
+ * Groq fallback: still works if you set GROQ_API_KEY instead.
  */
 import { getPrice, PriceHistory } from "../utils/oracle.js";
 import { submitTrade, usdAmount, fractionOfHoldings } from "../utils/submit.js";
@@ -19,9 +11,9 @@ import { getPortfolio } from "../utils/signer.js";
 import { Buy, Sell } from "../utils/signer.js";
 import { ASSETS, agentConfig } from "../config.js";
 
-const GROQ_API_KEY  = process.env.GROQ_API_KEY ?? "";
-const GROQ_BASE_URL = process.env.AI_BASE_URL ?? "https://api.groq.com/openai/v1";
-const AI_MODEL      = process.env.AI_MODEL     ?? "llama-3.3-70b-versatile";
+const AI_API_KEY    = process.env.OPENROUTER_API_KEY ?? process.env.GROQ_API_KEY ?? "";
+const AI_BASE_URL   = process.env.AI_BASE_URL ?? "https://openrouter.ai/api/v1";
+const AI_MODEL      = process.env.AI_MODEL    ?? "meta-llama/llama-3.3-70b-instruct:free";
 
 const POLL_INTERVAL_MS = 30_000;
 const HISTORY_WINDOW   = 10;
@@ -62,11 +54,12 @@ Your portfolio:
 Respond with ONLY valid JSON:
 {"action":"BUY"|"SELL"|"HOLD","size_pct":<0-100>,"reasoning":"<one sentence>"}`;
 
-  const res = await fetch(`${GROQ_BASE_URL}/chat/completions`, {
+  const res = await fetch(`${AI_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type":  "application/json",
-      "Authorization": `Bearer ${GROQ_API_KEY}`,
+      "Authorization": `Bearer ${AI_API_KEY}`,
+      "HTTP-Referer":  "https://agent-arena.vercel.app",
     },
     body: JSON.stringify({
       model: AI_MODEL,
@@ -88,8 +81,9 @@ Respond with ONLY valid JSON:
 }
 
 async function run(): Promise<void> {
-  if (!GROQ_API_KEY) {
-    console.error("[AI] GROQ_API_KEY not set. Get a free key at https://console.groq.com/keys");
+  if (!AI_API_KEY) {
+    console.error("[AI] No API key set. Add OPENROUTER_API_KEY=sk-or-... to .env.claude");
+    console.error("[AI] Get a free key at https://openrouter.ai/keys");
     process.exit(1);
   }
   console.log(`[AI] Starting — agentId=${agentConfig.agentId} challengeId=${agentConfig.challengeId} model=${AI_MODEL}`);

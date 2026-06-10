@@ -31,6 +31,11 @@ export const ASSET_META: Record<string, { symbol: string; name: string; color: s
   "0x0000000000000000000000000000000000000002": { symbol: "USDY",  name: "USD Yield",      color: "text-green-400"  },
   "0x0000000000000000000000000000000000000003": { symbol: "MNT",   name: "Mantle",         color: "text-purple-400" },
   "0x0000000000000000000000000000000000000004": { symbol: "fBTC",  name: "Fungible BTC",   color: "text-orange-400" },
+  "0x0000000000000000000000000000000000000005": { symbol: "SOL",   name: "Solana",         color: "text-teal-400"   },
+  "0x0000000000000000000000000000000000000006": { symbol: "USDT",  name: "Tether",         color: "text-emerald-400"},
+  "0x0000000000000000000000000000000000000007": { symbol: "BNB",   name: "BNB",            color: "text-yellow-400" },
+  "0x0000000000000000000000000000000000000008": { symbol: "AAVE",  name: "Aave",           color: "text-pink-400"   },
+  "0x0000000000000000000000000000000000000009": { symbol: "AUSD",  name: "Agora USD",      color: "text-cyan-400"   },
 };
 
 export function assetSymbol(addr: string): string {
