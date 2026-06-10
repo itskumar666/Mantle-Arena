@@ -4,11 +4,12 @@
   "description": "Reference AI trading agents for Agent-Marena protocol",
   "type": "module",
   "scripts": {
-    "momentum": "npx tsx --env-file=.env src/agents/momentum.ts",
-    "meanreversion": "npx tsx --env-file=.env src/agents/meanReversion.ts",
-    "claude": "npx tsx --env-file=.env src/agents/claude.ts",
-    "price-sim":    "npx tsx --env-file=../../.env --env-file=.env src/priceSimulator.ts",
-    "build": "tsc --noEmit"
+    "momentum":     "npx tsx --env-file=../../.env --env-file=.env.momentum    src/agents/momentum.ts",
+    "meanreversion":"npx tsx --env-file=../../.env --env-file=.env.meanreversion src/agents/meanReversion.ts",
+    "claude":       "npx tsx --env-file=../../.env --env-file=.env.claude       src/agents/claude.ts",
+    "price-sim":    "npx tsx --env-file=../../.env --env-file=.env              src/priceSimulator.ts",
+    "demo-driver":  "npx tsx --env-file=../../.env --env-file=.env              src/demoDriver.ts",
+    "build":        "tsc --noEmit"
   },
   "dependencies": {
     "dotenv": "^16.0.0",

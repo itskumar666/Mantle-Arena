@@ -1,52 +1,89 @@
 #!/bin/bash
-# Full demo: create challenge → enter AI agent → run price simulator + AI agent in parallel
+# Full demo: register up to 5 agents → create challenge → enter all → run instructions
+# Run from the Agent-Marena directory: ./run_demo.sh
 set -e
-source "$(dirname "$0")/.env"
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/.env"
 
 RPC=https://rpc.sepolia.mantle.xyz
 CHALLENGE_ADDR=0x943bef0f81B47D1ABA4B2eFa05624e041595706D
-AGENTS_DIR="$(dirname "$0")/packages/agents"
+REGISTRY_ADDR=0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd
+AGENTS_DIR="$SCRIPT_DIR/packages/agents"
+TARGET_AGENTS=5
 
-# ── Step 1: Get next challenge ID
-echo "Fetching challenge count..."
-NEXT_ID=$(cast call $CHALLENGE_ADDR "nextChallengeId()(uint256)" --rpc-url $RPC)
-echo "New challenge will be #$NEXT_ID"
+send() {
+  local DESC=$1; shift
+  echo "  → $DESC"
+  cast send "$@" --rpc-url $RPC --private-key $PRIVATE_KEY > /dev/null
+  sleep 7
+}
 
-START=$(( $(date +%s) + 180 ))   # 3 min enrollment
-END=$(( $(date +%s) + 480 ))     # 5 min trading (ends 8 min from now)
+# ── Step 1: Check and register missing agents
+echo "=== Step 1: Checking registered agents ==="
+TOTAL=$(cast call $REGISTRY_ADDR "totalAgents()(uint256)" --rpc-url $RPC)
+echo "  Currently registered: $TOTAL agents"
 
-# ── Step 2: Create challenge with all 9 assets
+while [ "$TOTAL" -lt "$TARGET_AGENTS" ]; do
+  NEXT=$(( TOTAL + 1 ))
+  echo ""
+  echo "  Registering Agent #$NEXT..."
+  # Generate a fresh signing key
+  KEY_OUTPUT=$(cast wallet new 2>&1)
+  SIGN_ADDR=$(echo "$KEY_OUTPUT" | grep "Address:" | awk '{print $2}')
+  SIGN_KEY=$(echo "$KEY_OUTPUT"  | grep "Private key:" | awk '{print $3}')
+
+  # strategyHash = keccak256("agent-auto-$NEXT")
+  STRATEGY=$(cast keccak "agent-auto-$NEXT")
+
+  send "Register Agent #$NEXT (signingKey=$SIGN_ADDR)" \
+    $REGISTRY_ADDR "registerAgent(address,bytes32,string)" \
+    $SIGN_ADDR $STRATEGY "Agent #$NEXT — auto-registered"
+
+  echo "  ✓ Agent #$NEXT registered"
+  echo "    Signing address: $SIGN_ADDR"
+  echo "    Private key:     $SIGN_KEY  ← save this!"
+  TOTAL=$NEXT
+done
+
 echo ""
-echo "Creating Challenge #$NEXT_ID  (3 min enrollment + 5 min trading)..."
-echo "Assets: mETH · fBTC · MNT · SOL · BNB · AAVE · USDY · USDT · AUSD"
-cast send $CHALLENGE_ADDR \
+echo "✓ All $TARGET_AGENTS agents registered."
+
+# ── Step 2: Create challenge
+echo ""
+echo "=== Step 2: Create Challenge ==="
+NEXT_ID=$(cast call $CHALLENGE_ADDR "nextChallengeId()(uint256)" --rpc-url $RPC)
+echo "  New challenge will be #$NEXT_ID"
+
+START=$(( $(date +%s) + 240 ))   # 4 min enrollment (enough to enter 5 agents)
+END=$(( $(date +%s) + 540 ))     # 5 min trading window after enrollment
+
+echo "  Enrollment: 4 min  |  Trading: 5 min"
+
+send "Create Challenge #$NEXT_ID" \
+  $CHALLENGE_ADDR \
   "createChallenge(uint64,uint64,uint128,uint128,uint128,address[])" \
   $START $END 10000000000000000000000 0 0 \
-  "[0x0000000000000000000000000000000000000001,0x0000000000000000000000000000000000000004,0x0000000000000000000000000000000000000003,0x0000000000000000000000000000000000000005,0x0000000000000000000000000000000000000007,0x0000000000000000000000000000000000000008]" \
-  --rpc-url $RPC --private-key $PRIVATE_KEY
-sleep 6
-echo "Challenge #$NEXT_ID created."
+  "[0x0000000000000000000000000000000000000001,0x0000000000000000000000000000000000000004,0x0000000000000000000000000000000000000003,0x0000000000000000000000000000000000000005,0x0000000000000000000000000000000000000007,0x0000000000000000000000000000000000000008]"
 
-# ── Step 3: Enter agents 1 and 2
+echo "  ✓ Challenge #$NEXT_ID created"
+
+# ── Step 3: Enter all 5 agents
 echo ""
-echo "Entering Agent 1..."
-cast send $CHALLENGE_ADDR "enterAgent(uint256,uint256)" $NEXT_ID 1 \
-  --rpc-url $RPC --private-key $PRIVATE_KEY
-sleep 6
-echo "Agent 1 entered."
+echo "=== Step 3: Entering Agents 1–$TARGET_AGENTS ==="
+for i in $(seq 1 $TARGET_AGENTS); do
+  send "Enter Agent $i" \
+    $CHALLENGE_ADDR "enterAgent(uint256,uint256)" $NEXT_ID $i
+  echo "  ✓ Agent $i entered"
+done
 
-echo "Entering Agent 2..."
-cast send $CHALLENGE_ADDR "enterAgent(uint256,uint256)" $NEXT_ID 2 \
-  --rpc-url $RPC --private-key $PRIVATE_KEY
-sleep 6
-echo "Agent 2 entered."
-
-# ── Step 4: Wait for challenge to go live
+# ── Step 4: Wait for live
+echo ""
+echo "=== Step 4: Waiting for challenge to go live ==="
 NOW=$(date +%s)
 WAIT=$(( START - NOW + 3 ))
 if [ $WAIT -gt 0 ]; then
-  echo ""
-  echo "Waiting ${WAIT}s for challenge to go live..."
+  echo "  Waiting ${WAIT}s..."
   for i in $(seq $WAIT -1 1); do
     printf "\r  Live in ${i}s...   "
     sleep 1
@@ -54,26 +91,40 @@ if [ $WAIT -gt 0 ]; then
   echo ""
 fi
 
+LIVE_UNTIL=$(date -r $END "+%H:%M:%S" 2>/dev/null || date -d @$END "+%H:%M:%S" 2>/dev/null || echo "see above")
+
+# ── Step 5: Instructions
 echo ""
-echo "Challenge #$NEXT_ID is LIVE"
-echo ""
-echo "┌─────────────────────────────────────────────────────────┐"
-echo "│  Open TWO more terminal tabs and run:                    │"
-echo "│                                                          │"
-echo "│  Tab 2 — Price Simulator (GBM market model):             │"
-echo "│    cd packages/agents && CHALLENGE_ID=$NEXT_ID npm run price-sim │"
-echo "│                                                          │"
-echo "│  Tab 3 — AI Agent (OpenRouter / Llama 70B):              │"
-echo "│    cd packages/agents && cp .env.claude .env             │"
-echo "│    # add OPENROUTER_API_KEY=sk-or-... to .env.claude     │"
-echo "│    CHALLENGE_ID=$NEXT_ID AGENT_ID=1 npm run claude              │"
-echo "│                                                          │"
-echo "│  Tab 4 (optional) — Momentum Agent:                      │"
-echo "│    cd packages/agents && cp .env.momentum .env           │"
-echo "│    CHALLENGE_ID=$NEXT_ID AGENT_ID=2 npm run momentum            │"
-echo "│                                                          │"
-echo "│  Challenge ends at: $(date -v+${END}S 2>/dev/null || date -d @$END 2>/dev/null || echo 'see above') │"
-echo "│  Then settle on the frontend to see the winner.          │"
-echo "└─────────────────────────────────────────────────────────┘"
-echo ""
-echo "Challenge #$NEXT_ID is live. Run the agents above, then settle when it ends."
+echo "╔══════════════════════════════════════════════════════════════╗"
+echo "║  Challenge #$NEXT_ID is LIVE — trading ends at $LIVE_UNTIL       ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║                                                              ║"
+echo "║  Open 6 terminal tabs from the Agent-Marena directory:       ║"
+echo "║                                                              ║"
+echo "║  Tab 1 — GBM Price Simulator (keep running):                ║"
+echo "║    cd packages/agents                                        ║"
+echo "║    npm run price-sim                                         ║"
+echo "║                                                              ║"
+echo "║  Tab 2 — AI Agent (OpenRouter, Agent #1):                   ║"
+echo "║    cd packages/agents                                        ║"
+echo "║    CHALLENGE_ID=$NEXT_ID AGENT_ID=1 AGENT_SIGNING_KEY=\$KEY npm run claude  ║"
+echo "║                                                              ║"
+echo "║  Tab 3 — Momentum Agent (Agent #2):                         ║"
+echo "║    cd packages/agents                                        ║"
+echo "║    CHALLENGE_ID=$NEXT_ID AGENT_ID=2 npm run momentum                  ║"
+echo "║                                                              ║"
+echo "║  Tab 4 — Mean Reversion Agent (Agent #3):                   ║"
+echo "║    cd packages/agents                                        ║"
+echo "║    CHALLENGE_ID=$NEXT_ID AGENT_ID=3 npm run meanreversion            ║"
+echo "║                                                              ║"
+echo "║  Tab 5 — Momentum Agent v2 (Agent #4):                      ║"
+echo "║    cd packages/agents                                        ║"
+echo "║    CHALLENGE_ID=$NEXT_ID AGENT_ID=4 npm run momentum                  ║"
+echo "║                                                              ║"
+echo "║  Tab 6 — Mean Reversion Agent v2 (Agent #5):                ║"
+echo "║    cd packages/agents                                        ║"
+echo "║    CHALLENGE_ID=$NEXT_ID AGENT_ID=5 npm run meanreversion            ║"
+echo "║                                                              ║"
+echo "╠══════════════════════════════════════════════════════════════╣"
+echo "║  After trading ends: go to frontend → Settle → Claim Trophy  ║"
+echo "╚══════════════════════════════════════════════════════════════╝"
