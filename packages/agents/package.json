@@ -7,7 +7,7 @@
     "momentum": "npx tsx --env-file=.env src/agents/momentum.ts",
     "meanreversion": "npx tsx --env-file=.env src/agents/meanReversion.ts",
     "claude": "npx tsx --env-file=.env src/agents/claude.ts",
-    "demo-driver": "npx tsx --env-file=../../.env --env-file=.env src/demoDriver.ts",
+    "price-sim":    "npx tsx --env-file=../../.env --env-file=.env src/priceSimulator.ts",
     "build": "tsc --noEmit"
   },
   "dependencies": {
