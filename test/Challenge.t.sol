@@ -117,14 +117,15 @@ contract ChallengeTest is Test {
         assertEq(uint256(challenge.phaseOf(id)), uint256(Challenge.Phase.Enrolling));
     }
 
-    function test_createChallenge_onlyOwner() public {
+    function test_createChallenge_permissionless() public {
         address[] memory assets = _defaultAssets();
         uint64 start = uint64(block.timestamp) + START_OFFSET;
         uint64 end = start + DURATION;
 
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, devAlice));
+        // Anyone can create a challenge now — devAlice should succeed
         vm.prank(devAlice);
-        challenge.createChallenge(start, end, STARTING_BALANCE, ENTRY_FEE, SETTLE_BOUNTY, assets);
+        uint256 id = challenge.createChallenge(start, end, STARTING_BALANCE, ENTRY_FEE, SETTLE_BOUNTY, assets);
+        assertEq(challenge.getChallenge(id).creator, devAlice);
     }
 
     function test_createChallenge_revertsOnStartInPast() public {

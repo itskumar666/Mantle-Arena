@@ -3,12 +3,95 @@
 @tailwind utilities;
 
 :root {
-  --background: #0f0f0f;
+  --background: #0a0a0f;
   --foreground: #ededed;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Arena ambience: a subtle warm radial glow + fine grid, fixed behind content. */
+.arena-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(245, 185, 66, 0.07), transparent 70%),
+    radial-gradient(700px 500px at 85% 10%, rgba(169, 116, 255, 0.06), transparent 70%),
+    #0a0a0f;
+}
+.arena-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+}
+
+/* Gradient text for headline accents. */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #f7cb6e 0%, #f5b942 40%, #c8941f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Shimmering border for the hero CTA / champion elements. */
+.shimmer-border {
+  position: relative;
+  background:
+    linear-gradient(var(--arena-card, #13131d), var(--arena-card, #13131d)) padding-box,
+    linear-gradient(110deg, rgba(245, 185, 66, 0.5), rgba(169, 116, 255, 0.4), rgba(245, 185, 66, 0.5)) border-box;
+  background-size: 200% 100%;
+  border: 1px solid transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+/* Thin custom scrollbar so dark panels feel intentional. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+/* Range input styling for the aggressiveness slider. */
+input[type="range"] {
+  height: 6px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #a974ff, #f5b942);
+  appearance: none;
+  -webkit-appearance: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid #f5b942;
+  cursor: pointer;
+  box-shadow: 0 0 12px -2px rgba(245, 185, 66, 0.6);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 2px solid #f5b942;
+  cursor: pointer;
 }

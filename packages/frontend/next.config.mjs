@@ -1,3 +1,10 @@
+import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import path from "path";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.join(__dirname, ".env.local"), override: true });
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,

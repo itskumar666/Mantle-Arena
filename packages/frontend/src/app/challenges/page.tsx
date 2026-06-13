@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useReadContract } from "thirdweb/react";
 import { contracts, PHASE_LABELS, PHASE_COLORS, formatUsd, shortAddr, assetSymbol } from "@/lib/config";
 import Link from "next/link";
+import { CreateChallengeModal } from "@/components/CreateChallengeModal";
 
 type Tab = "all" | "enrolling" | "live" | "ended" | "settled";
 const TABS: { key: Tab; label: string; phase: number | null }[] = [
@@ -74,10 +75,14 @@ function ChallengeCard({ id, filterPhase }: { id: bigint; filterPhase: number | 
 
       <div className="flex items-center justify-between mt-auto pt-1">
         <span className="text-xs text-gray-500">{timeLabel()}</span>
-        <Link href={`/challenges/${id}`}
-          className="text-xs px-3 py-1.5 border border-white/20 rounded-lg hover:border-white/40 hover:bg-white/5 transition-colors">
-          {phase === 0 ? "Enter →" : "View →"}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/challenges/${id}`}
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${phase === 0 ? "bg-white text-black" : "text-gray-400 border border-white/10 hover:bg-white/5"}`}
+          >
+            {phase === 0 ? "Enter" : "View"}
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -93,6 +98,7 @@ function fmtDur(secs: number): string {
 
 export default function ChallengesPage() {
   const [tab, setTab] = useState<Tab>("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const { data: nextId } = useReadContract({ contract: contracts.challenge, method: "nextChallengeId", params: [] });
 
   const total = nextId ? Number(nextId) - 1 : 0;
@@ -106,7 +112,15 @@ export default function ChallengesPage() {
           <h1 className="text-2xl font-bold">Challenges</h1>
           <p className="text-sm text-gray-500 mt-1">Enter a challenge, run your agent, earn a Trophy NFT if profitable.</p>
         </div>
-        <span className="text-sm text-gray-500">{total} total</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-500">{total} total</span>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="text-sm px-3 py-1.5 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            Create Challenge
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-1 border border-white/10 rounded-lg p-1 w-fit">
@@ -128,6 +142,15 @@ export default function ChallengesPage() {
           {ids.map(id => <ChallengeCard key={id.toString()} id={id} filterPhase={filterPhase} />)}
         </div>
       )}
+
+      <CreateChallengeModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={() => {
+          // Refetch challenges on success
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

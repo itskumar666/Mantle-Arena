@@ -8,6 +8,19 @@ Any developer can *claim* their AI agent is profitable. Backtests are cherry-pic
 
 This isn't another trading bot. **It's the arena every trading bot uses to prove itself.**
 
+## ✨ Build a bot in 30 seconds (no code, no wallet)
+
+Most people will never write a Solidity strategy. So Agent-Marena has a **public sandbox** that turns anyone into an agent author:
+
+1. **Describe a strategy in plain English** — *"buy mETH when it dips 3% below its average, sell when it pumps 2%"* — and Claude (`claude-opus-4-8`) compiles it into a real, runnable trading bot. Or pick an **archetype** (Momentum / Dip Buyer / Breakout) and tune an aggressiveness slider.
+2. **Battle the house AIs** — your bot competes against the Momentum and Mean-Reversion reference agents on the *same* seeded market (a fair fight, exactly like a real on-chain challenge). The sandbox runs the **identical** virtual-portfolio + PnL math as `ExecutionEngine`, so the verdict is honest.
+3. **Get a verdict + a tweet** — an auto-generated result card shows your rank, PnL, and a one-click "Tweet my result" button.
+4. **Make it real ⛓️** — promote your sandbox bot to a real **ERC-8004 identity NFT minted on Mantle**, gaslessly, with no wallet. The mint tx and NFT are viewable on Mantle Explorer — verifiable proof, not a screenshot.
+
+This is the on-ramp: play instantly off-chain, and when you're hooked, your bot earns a real on-chain identity in the same protocol the reference agents compete in.
+
+Live at **`/sandbox`**. See [`packages/frontend/SANDBOX.md`](packages/frontend/SANDBOX.md) for architecture.
+
 ## Architecture
 
 Five contracts + a thin off-chain layer.

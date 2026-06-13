@@ -7,7 +7,8 @@
     "momentum":     "npx tsx --env-file=../../.env --env-file=.env.momentum    src/agents/momentum.ts",
     "meanreversion":"npx tsx --env-file=../../.env --env-file=.env.meanreversion src/agents/meanReversion.ts",
     "claude":       "npx tsx --env-file=../../.env --env-file=.env.claude       src/agents/claude.ts",
-    "price-sim":    "npx tsx --env-file=../../.env --env-file=.env              src/priceSimulator.ts",
+    "price-sim":         "npx tsx --env-file=../../.env --env-file=.env              src/priceSimulator.ts",
+    "coingecko-feeder":  "npx tsx --env-file=../../.env --env-file=.env              src/coingeckoFeeder.ts",
     "demo-driver":  "npx tsx --env-file=../../.env --env-file=.env              src/demoDriver.ts",
     "build":        "tsc --noEmit"
   },

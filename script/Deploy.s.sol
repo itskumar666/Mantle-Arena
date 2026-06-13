@@ -10,6 +10,7 @@ import {ExecutionEngine} from "../src/ExecutionEngine.sol";
 import {Leaderboard} from "../src/Leaderboard.sol";
 import {Reputation} from "../src/Reputation.sol";
 import {StakeVault} from "../src/StakeVault.sol";
+import {TrophyNFT} from "../src/TrophyNFT.sol";
 import {Api3PriceOracle} from "../src/oracle/Api3PriceOracle.sol";
 import {IPriceOracle} from "../src/interfaces/IPriceOracle.sol";
 
@@ -39,6 +40,7 @@ contract DeployScript is Script {
         Leaderboard leaderboard;
         Reputation reputation;
         StakeVault stakeVault;
+        TrophyNFT trophy;
     }
 
     function run() external returns (Deployment memory d) {
@@ -61,6 +63,7 @@ contract DeployScript is Script {
         d.leaderboard = new Leaderboard(d.challenge, d.engine);
         d.reputation = new Reputation(d.leaderboard);
         d.stakeVault = new StakeVault(d.registry, d.challenge, d.leaderboard, deployer, treasury);
+        d.trophy = new TrophyNFT(d.leaderboard, d.registry);
 
         vm.stopBroadcast();
 
@@ -72,5 +75,6 @@ contract DeployScript is Script {
         console2.log("Leaderboard     ", address(d.leaderboard));
         console2.log("Reputation      ", address(d.reputation));
         console2.log("StakeVault      ", address(d.stakeVault));
+        console2.log("TrophyNFT       ", address(d.trophy));
     }
 }

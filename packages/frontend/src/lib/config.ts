@@ -14,14 +14,14 @@ export const client = createThirdwebClient({
   clientId: process.env.NEXT_PUBLIC_THIRDWEB_CLIENT_ID ?? "",
 });
 
-const ADDRESSES = {
-  registry:    process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS   ?? "0xd12719De9e5f76C2a6C2A91CdF2f0FF65d366BEd",
-  challenge:   process.env.NEXT_PUBLIC_CHALLENGE_ADDRESS        ?? "0x943bef0f81B47D1ABA4B2eFa05624e041595706D",
-  engine:      process.env.NEXT_PUBLIC_EXECUTION_ENGINE_ADDRESS ?? "0x27DAE5cA1b42918F13B7b454A76E5D3Bbcc6989b",
-  leaderboard: process.env.NEXT_PUBLIC_LEADERBOARD_ADDRESS      ?? "0xB050caC3607c4c2818A5b3E2E9B231842766D771",
-  reputation:  process.env.NEXT_PUBLIC_REPUTATION_ADDRESS       ?? "0x39eD9F8a8BCAC2dB3473D351f6a21B35e7C9487C",
-  stakeVault:  process.env.NEXT_PUBLIC_STAKE_VAULT_ADDRESS      ?? "0xB9a1527b97400511bE583405B72a10F2DB9BB611",
-  trophy:      process.env.NEXT_PUBLIC_TROPHY_ADDRESS           ?? "0x7C24Bdf978a13AAbC917d4A7Fb1becD88d75E5d5",
+export const ADDRESSES = {
+  registry:    process.env.NEXT_PUBLIC_AGENT_REGISTRY_ADDRESS   ?? "0xb135bbbd7b224599b970acb3d840b78f07d1bc50",
+  challenge:   process.env.NEXT_PUBLIC_CHALLENGE_ADDRESS        ?? "0x52525Cd48D46228F2dD4C0C023145AE1Eac8597b",
+  engine:      process.env.NEXT_PUBLIC_EXECUTION_ENGINE_ADDRESS ?? "0x9118ab69430d342961c3362fa654560eed53dccd",
+  leaderboard: process.env.NEXT_PUBLIC_LEADERBOARD_ADDRESS      ?? "0xb583b0b9918638bd66874c1d321d9fc9ad63ea6d",
+  reputation:  process.env.NEXT_PUBLIC_REPUTATION_ADDRESS       ?? "0x269c3569ab761fe1122beca6b27687f9389216a4",
+  stakeVault:  process.env.NEXT_PUBLIC_STAKE_VAULT_ADDRESS      ?? "0x2203253a5abcc71f4e31db30fdfe4c714a981edd",
+  trophy:      process.env.NEXT_PUBLIC_TROPHY_ADDRESS           ?? "0x466a926659b371113ca43c51cd39a47227bbcd54",
   oracle:      process.env.NEXT_PUBLIC_ORACLE_ADDRESS           ?? "0xe3ea6971C66121Cb24f878AeE30f78A39B3fc94b",
 } as const;
 
@@ -76,6 +76,19 @@ const challengeAbi = [
     outputs: [],
     stateMutability: "payable",
   },
+  {
+    type: "function", name: "createChallenge",
+    inputs: [
+      { name: "startTime",       type: "uint64"    },
+      { name: "endTime",         type: "uint64"    },
+      { name: "startingBalance", type: "uint128"   },
+      { name: "entryFee",        type: "uint128"   },
+      { name: "settleBounty",    type: "uint128"   },
+      { name: "allowedAssets",   type: "address[]" },
+    ],
+    outputs: [{ name: "challengeId", type: "uint256" }],
+    stateMutability: "nonpayable",
+  },
 ] as const;
 
 const registryAbi = [
@@ -92,8 +105,9 @@ const registryAbi = [
     }],
     stateMutability: "view",
   },
-  { type: "function", name: "totalAgents",  inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
-  { type: "function", name: "ownerOf",      inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ type: "address" }], stateMutability: "view" },
+  { type: "function", name: "totalAgents",         inputs: [], outputs: [{ type: "uint256" }], stateMutability: "view" },
+  { type: "function", name: "ownerOf",             inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ type: "address" }], stateMutability: "view" },
+  { type: "function", name: "agentIdBySigningKey", inputs: [{ name: "signingKey", type: "address" }], outputs: [{ type: "uint256" }], stateMutability: "view" },
   {
     type: "function", name: "registerAgent",
     inputs: [
@@ -104,6 +118,11 @@ const registryAbi = [
     outputs: [{ name: "agentId", type: "uint256" }],
     stateMutability: "nonpayable",
   },
+  { type: "error", name: "ZeroSigningKey",              inputs: [] },
+  { type: "error", name: "ZeroStrategyHash",            inputs: [] },
+  { type: "error", name: "SigningKeyAlreadyRegistered", inputs: [{ name: "signingKey", type: "address" }, { name: "existingAgentId", type: "uint256" }] },
+  { type: "error", name: "NotAgentOwner",               inputs: [{ name: "agentId", type: "uint256" }, { name: "caller", type: "address" }] },
+  { type: "error", name: "AgentDoesNotExist",           inputs: [{ name: "agentId", type: "uint256" }] },
 ] as const;
 
 const leaderboardAbi = [
@@ -154,6 +173,31 @@ const engineAbi = [
     inputs: [{ name: "challengeId", type: "uint256" }, { name: "agentId", type: "uint256" }, { name: "asset", type: "address" }],
     outputs: [{ type: "uint256" }],
     stateMutability: "view",
+  },
+  {
+    type: "function", name: "nextNonce",
+    inputs: [{ name: "challengeId", type: "uint256" }, { name: "agentId", type: "uint256" }],
+    outputs: [{ type: "uint64" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function", name: "submitAction",
+    inputs: [
+      {
+        name: "a", type: "tuple", components: [
+          { name: "challengeId", type: "uint256" },
+          { name: "agentId",     type: "uint256" },
+          { name: "kind",        type: "uint8"   },
+          { name: "asset",       type: "address" },
+          { name: "size",        type: "uint128" },
+          { name: "nonce",       type: "uint64"  },
+          { name: "deadline",    type: "uint64"  },
+        ],
+      },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
   },
 ] as const;
 

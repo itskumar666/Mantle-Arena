@@ -74,7 +74,7 @@ contract Challenge is Ownable, ReentrancyGuard {
 
     // -------- admin --------
 
-    /// @notice Create a new challenge. Owner-gated in MVP — v2 may relax to permissionless.
+    /// @notice Create a new challenge. Permissionless — anyone can host a competition.
     /// @param startTime       Unix time when enrollment closes and the live window opens.
     /// @param endTime         Unix time when trading closes and the challenge becomes settleable.
     /// @param startingBalance Virtual quote-currency balance allocated to each agent.
@@ -88,7 +88,7 @@ contract Challenge is Ownable, ReentrancyGuard {
         uint128 entryFee,
         uint128 settleBounty,
         address[] calldata allowedAssets
-    ) external onlyOwner returns (uint256 challengeId) {
+    ) external returns (uint256 challengeId) {
         if (startTime <= block.timestamp || endTime <= startTime) {
             revert InvalidTimes(startTime, endTime);
         }

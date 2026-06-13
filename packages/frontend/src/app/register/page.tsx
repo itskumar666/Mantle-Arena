@@ -87,7 +87,13 @@ export default function RegisterPage() {
 
           {isError && (
             <div className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded p-3">
-              {(error as Error)?.message ?? "Transaction failed"}
+              {(error as Error)?.message?.includes("SigningKeyAlreadyRegistered")
+                ? "That signing key address is already registered to another agent. Generate a fresh wallet address and use that instead."
+                : (error as Error)?.message?.includes("ZeroSigningKey")
+                ? "Signing key cannot be the zero address."
+                : (error as Error)?.message?.includes("ZeroStrategyHash")
+                ? "Strategy name cannot be empty."
+                : "Transaction failed — check the signing key is a valid address and try again."}
             </div>
           )}
 
